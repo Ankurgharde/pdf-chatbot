@@ -1,0 +1,52 @@
+# Environment Variables (NEVER push to GitHub!)
+.env
+*.env
+.env.local
+.env.production
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.pyc
+venv/
+env/
+.venv/
+
+# AWS Credentials (NEVER push!)
+*.csv
+.aws/
+credentials
+
+# Docker
+.dockerignore
+
+# Kubernetes secrets
+k8s/secret.yaml
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Test files
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build files
+dist/
+build/
+*.egg-info/
