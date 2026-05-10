@@ -1,51 +1,81 @@
 name: Deploy to EKS
 
 on:
-push:
-branches:
-- main
+  push:
+    branches: [main]
 
 jobs:
-deploy:
-runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-steps:
-  - name: Checkout Code
-    uses: actions/checkout@v4
+    steps:
+    # Step 1: Checkout Code
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-  - name: Configure AWS Credentials
-    uses: aws-actions/configure-aws-credentials@v4
-    with:
-      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      aws-region: ${{ secrets.AWS_REGION }}
+    # Step 2: Configure AWS
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
 
-  - name: Login to Amazon ECR
-    id: login-ecr
-    uses: aws-actions/amazon-ecr-login@v2
+    # Step 3: Login to ECR
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
-  - name: Build Docker Image
-    run: |
-      docker build -t pdf-chatbot ./backend
+    # Step 4: Build Docker Image
+    - name: Build Docker Image
+      run: |
+        docker build -t ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest .
+        docker build -t ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} .
 
-  - name: Tag Docker Image
-    run: |
-      docker tag pdf-chatbot:latest \
-      ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+    # Step 5: Push to ECR
+    - name: Push Docker Image to ECR
+      run: |
+        docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+        docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
-  - name: Push Docker Image
-    run: |
-      docker push \
-      ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+    # Step 6: Install kubectl
+    - name: Install kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
 
-  - name: Update kubeconfig
-    run: |
-      aws eks update-kubeconfig \
-        --name pdf-chatbot-cluster \
-        --region ${{ secrets.AWS_REGION }}
+    # Step 7: Connect to EKS
+    - name: Update kubeconfig for EKS
+      run: |
+        aws eks update-kubeconfig \
+          --name pdf-chatbot-cluster \
+          --region ${{ secrets.AWS_REGION }}
 
-  - name: Deploy to Kubernetes
-    run: |
-      kubectl apply -f k8s/
-      kubectl rollout restart deployment/pdf-chatbot
+    # Step 8: Create Kubernetes Secrets
+    - name: Create Kubernetes Secrets
+      run: |
+        kubectl create secret generic app-secrets \
+          --from-literal=PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }} \
+          --from-literal=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+          --dry-run=client -o yaml | kubectl apply -f -
 
+    # Step 9: Deploy to Kubernetes
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f k8s/
+        kubectl set image deployment/pdf-chatbot \
+          pdf-chatbot=${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+
+    # Step 10: Wait for Deployment
+    - name: Wait for Deployment Rollout
+      run: |
+        kubectl rollout status deployment/pdf-chatbot --timeout=300s
+
+    # Step 11: Show Live URL
+    - name: Get Live Service URL
+      run: |
+        echo "========================================="
+        echo "   PDF Chatbot Deployment Complete! 🚀   "
+        echo "========================================="
+        kubectl get services pdf-chatbot-service
+        echo "========================================="
