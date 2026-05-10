@@ -5,6 +5,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Pinecone as PineconeStore
 
 from pinecone import Pinecone, ServerlessSpec
+import httpx
 
 load_dotenv()
 
@@ -16,10 +17,14 @@ pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 INDEX_NAME = os.getenv("PINECONE_INDEX")
 
 # ---------------------------
-# EMBEDDINGS (VERY IMPORTANT)
+# EMBEDDINGS FIX
 # ---------------------------
+http_client = httpx.Client()
+
 embeddings = OpenAIEmbeddings(
-    model="text-embedding-3-small"
+    model="text-embedding-3-small",
+    openai_api_key=os.getenv("OPENAI_API_KEY"),
+    http_client=http_client
 )
 
 # ---------------------------
