@@ -1,10 +1,10 @@
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from backend.pinecone_db import get_vectorstore
+from pinecone_db import get_vectorstore
 
 def process_pdf(file_path, metadata=None):
     # -------------------------
-    # Load PDF (more powerful loader)
+    # Load PDF 
     # -------------------------
     loader = PyMuPDFLoader(file_path)
     docs = loader.load()

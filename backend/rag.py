@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 
 from langchain_openai import ChatOpenAI
-from backend.pinecone_db import get_vectorstore
+from pinecone_db import get_vectorstore
 
 load_dotenv()
 
