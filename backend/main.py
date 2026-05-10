@@ -2,9 +2,8 @@ import os
 from fastapi import FastAPI, UploadFile, File
 from typing import List
 from dotenv import load_dotenv
-
-from backend.ingest import process_pdf
-from backend.rag import ask_question
+from ingest import process_pdf
+from rag import ask_question
 
 load_dotenv()
 
@@ -14,7 +13,7 @@ app = FastAPI(title="PDF Chatbot API")
 # ---------------- HOME ----------------
 @app.get("/")
 def home():
-    return {"message": "API running 🚀"}
+    return {"message": "API running successfully "}
 
 
 # ---------------- UPLOAD ----------------
@@ -44,7 +43,7 @@ async def upload_pdfs(files: List[UploadFile] = File(...)):
     }
 
 
-# ---------------- CHAT (MISSING BEFORE) ----------------
+# ---------------- CHAT ----------------
 @app.get("/chat")
 def chat(query: str):
     return ask_question(query)
