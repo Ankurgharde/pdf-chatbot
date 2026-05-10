@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Pinecone as PineconeStore
 
-from pinecone import Pinecone, ServerlessSpec
+from pinecone import Pinecone
 import httpx
 
 load_dotenv()
@@ -14,10 +14,12 @@ load_dotenv()
 # ---------------------------
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 
-INDEX_NAME = os.getenv("PINECONE_INDEX")
+INDEX_NAME = os.getenv("PINECONE_INDEX", "pdf-chatbot")
+
+print(f"Using Pinecone Index: {INDEX_NAME}")
 
 # ---------------------------
-# EMBEDDINGS FIX
+# EMBEDDINGS
 # ---------------------------
 http_client = httpx.Client()
 

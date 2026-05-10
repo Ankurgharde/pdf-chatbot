@@ -4,7 +4,7 @@ from pinecone_db import get_vectorstore
 
 def process_pdf(file_path, metadata=None):
     # -------------------------
-    # Load PDF 
+    # Load PDF
     # -------------------------
     loader = PyMuPDFLoader(file_path)
     docs = loader.load()

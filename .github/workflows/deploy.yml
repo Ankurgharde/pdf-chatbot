@@ -28,27 +28,15 @@ jobs:
 
     # Step 4: Build Docker Image
     - name: Build Docker Image
-      env:
-        REGISTRY: ${{ secrets.ECR_REGISTRY }}
-        REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-        IMAGE_TAG: ${{ github.sha }}
       run: |
-        if [ -z "$REGISTRY" ] || [ -z "$REPOSITORY" ]; then
-          echo "ERROR: ECR_REGISTRY or ECR_REPOSITORY secrets are not set"
-          exit 1
-        fi
-        docker build -t "${REGISTRY}/${REPOSITORY}:latest" .
-        docker build -t "${REGISTRY}/${REPOSITORY}:${IMAGE_TAG}" .
+        docker build -t ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest .
+        docker build -t ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} .
 
     # Step 5: Push to ECR
     - name: Push Docker Image to ECR
-      env:
-        REGISTRY: ${{ secrets.ECR_REGISTRY }}
-        REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-        IMAGE_TAG: ${{ github.sha }}
       run: |
-        docker push "${REGISTRY}/${REPOSITORY}:latest"
-        docker push "${REGISTRY}/${REPOSITORY}:${IMAGE_TAG}"
+        docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+        docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
     # Step 6: Install kubectl
     - name: Install kubectl
@@ -73,14 +61,10 @@ jobs:
 
     # Step 9: Deploy to Kubernetes
     - name: Deploy to Kubernetes
-      env:
-        REGISTRY: ${{ secrets.ECR_REGISTRY }}
-        REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-        IMAGE_TAG: ${{ github.sha }}
       run: |
         kubectl apply -f k8s/
         kubectl set image deployment/pdf-chatbot \
-          pdf-chatbot="${REGISTRY}/${REPOSITORY}:${IMAGE_TAG}"
+          pdf-chatbot=${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
 
     # Step 10: Wait for Deployment
     - name: Wait for Deployment Rollout
