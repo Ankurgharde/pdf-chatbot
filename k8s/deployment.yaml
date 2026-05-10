@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: pdf-chatbot
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: pdf-chatbot
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: pdf-chatbot
-        image: YOUR_ECR_URL/pdf-chatbot:latest
+        image: 985317222062.dkr.ecr.us-east-1.amazonaws.com/pdf-chatbot:latest
         ports:
         - containerPort: 8000
         env:
@@ -23,3 +23,15 @@ spec:
             secretKeyRef:
               name: app-secrets
               key: PINECONE_API_KEY
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: OPENAI_API_KEY
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
